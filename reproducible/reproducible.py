@@ -17,16 +17,20 @@ import tarfile
 
 from argparse import ArgumentParser
 
-from typing import List, Tuple, Optional, Set, IO, Sequence
+from typing import List, Tuple, Optional, Set, IO, Sequence, Iterator, cast, TYPE_CHECKING
 from zipfile import ZipFile
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
 
 
 @contextlib.contextmanager
-def setlocale(name: str) -> None:
+def setlocale(name: str) -> Iterator[None]:
     """Context manager for changing the current locale"""
     saved_locale = locale.setlocale(locale.LC_ALL)
     try:
-        yield locale.setlocale(locale.LC_ALL, name)
+        locale.setlocale(locale.LC_ALL, name)
+        yield
     finally:
         locale.setlocale(locale.LC_ALL, saved_locale)
 
@@ -75,8 +79,8 @@ def tar_archive_deterministically(
     with setlocale("C"):
         target_files.sort(key=lambda t: locale.strxfrm(t[0]))
 
-    def tar_deterministically(outf: IO[bytes]) -> None:
-        with tarfile.open(fileobj=outf, mode="w:") as tar_file:
+    def tar_deterministically(outf: SupportsWrite[bytes]) -> None:
+        with tarfile.open(fileobj=cast(IO[bytes], outf), mode="w:") as tar_file:
             for relpath, fpath in target_files:
                 arcname = relpath
                 if prepend_path is not None:
