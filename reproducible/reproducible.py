@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Standalone python file for building or repacking archives reproducibly"""
 
-import io
 import shutil
 import tempfile
 import zipfile
@@ -17,7 +16,7 @@ import tarfile
 
 from argparse import ArgumentParser
 
-from typing import List, Tuple, Optional, Set, IO, Sequence, Iterator, cast, TYPE_CHECKING
+from typing import List, Tuple, Optional, Set, IO, Sequence, Iterator, cast
 from zipfile import ZipFile
 
 
@@ -53,7 +52,7 @@ def tar_archive_deterministically(
     :param file_selector: set of relative file paths to include
     :return:
     """
-    representative_name = f"{os.path.basename(dir_to_archive)}.tar"
+    representative_name = "reproducible.tar"
 
     def reset(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo:
         """Helper to reset owner/group and modification time for tar entries"""
@@ -84,19 +83,19 @@ def tar_archive_deterministically(
                     arcname = os.path.normpath(os.path.join(prepend_path, relpath))
                 tar_file.add(fpath, filter=reset, recursive=False, arcname=arcname)
 
-    if compress:
-        with gzip.GzipFile(
-            filename=representative_name, mode="wb", fileobj=out_file, mtime=0
-        ) as gzip_file:
-            tar_deterministically(cast(IO[bytes], gzip_file))
-    else:
-        with open(out_file, "wb") as out_file:
-            tar_deterministically(out_file)
+    with open(out_file, "wb") as outf:
+        if compress:
+            with gzip.GzipFile(
+                filename=representative_name, mode="wb", fileobj=outf, mtime=0
+            ) as gzip_file:
+                tar_deterministically(cast(IO[bytes], gzip_file))
+        else:
+            tar_deterministically(outf)
 
 
 def zip_archive_deterministically(
     dir_to_archive: str,
-    out_file: IO[bytes],
+    out_file: str,
     prepend_path: Optional[str] = None,
     compress: bool = True,
     file_selector: Optional[Set[str]] = None,
@@ -142,12 +141,7 @@ def zip_archive_deterministically(
                 info = zipfile.ZipInfo(arcname, date_time=(1980, 1, 1, 0, 0, 0))
                 with open(fpath, "rb") as inpf:
                     z.writestr(info, inpf.read())
-        f.seek(0, io.SEEK_SET)
-        while True:
-            data_bytes = f.read(1024)
-            if len(data_bytes) == 0:
-                break
-            out_file.write(data_bytes)
+        shutil.copyfile(f.name, out_file)
 
 
 """Define the possible output formats. Default is tar.gz"""
