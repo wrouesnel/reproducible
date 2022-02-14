@@ -88,7 +88,7 @@ def tar_archive_deterministically(
         with gzip.GzipFile(
             filename=representative_name, mode="wb", fileobj=out_file, mtime=0
         ) as gzip_file:
-            tar_deterministically(cast(IO[bytes],gzip_file))
+            tar_deterministically(cast(IO[bytes], gzip_file))
     else:
         with open(out_file, "wb") as out_file:
             tar_deterministically(out_file)

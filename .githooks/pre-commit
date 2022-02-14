@@ -33,12 +33,12 @@ fi
 
 if ! ./lint ; then
     error "Lint errors. Use git commit --no-verify to ignore."
-    #retcode=1
+    retcode=1
 fi
 
 if ! ./typecheck ; then
     error "Typechecking errors. Use git commit --no-verify to ignore."
-    #retcode=1
+    retcode=1
 fi
 
 if [ $retcode != 0 ]; then
