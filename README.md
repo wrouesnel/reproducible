@@ -1,10 +1,18 @@
 # reproducible
-Create reproducible archives
+
+Modified Version.
+
+Create or convert archives into bit-exact reproducible formats.
+
+## Installation
+
+The only required file is `reproducible/reproducible.py` which works with any standard Python 3.8 or higher
+installation and can be used by itsef. The virtualenv and other support files are to provice CI support.
 
 ## Usage
 ```bash
 ./reproducible.py -d dir_to_archive -o archive.tar.gz  \
-                  --prepend RepoName-master --timestamp 1414213562
+                  --prepend RepoName-master
 ```
 
 ## Tips
