@@ -166,7 +166,7 @@ def main(argv: Optional[Sequence[str]]) -> None:
     parser = ArgumentParser()
 
     parser.add_argument(
-        "-o", "--format", choices=OUTPUT_FMTS, default="tar-gz", help="output format"
+        "-f", "--format", choices=OUTPUT_FMTS, default="tar-gz", help="output format"
     )
 
     group = parser.add_mutually_exclusive_group(required=True)

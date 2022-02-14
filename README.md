@@ -10,32 +10,25 @@ The only required file is `reproducible/reproducible.py` which works with any st
 installation and can be used by itsef. The virtualenv and other support files are to provice CI support.
 
 ## Usage
+
+In the simplest form you pass the path for the directory you want to pack up, and optionally
+a prefix you want to include in the tar file (which will be created with whatever is in the
+directory as root):
+
 ```bash
 ./reproducible.py -d dir_to_archive -o archive.tar.gz  \
                   --prepend RepoName-master
 ```
 
-## Tips
-**First, get a .tar.gz file**
-
-- GitHub users: download the archive using the green button or from the Release section.
-
-- Git users: `git archive --format=tar.gz --prefix=topfolder/ -o out.tar.gz master` or `v1.2.3`
-
-- PyPI users: `python3 setup.py sdist`
-
-**Extract the archive, stripping the top folder**
+You can also create zip files:
 
 ```bash
-mkdir out_dir
-tar -xf out.tar.gz -C out_dir --strip 1
+./reproducible.py -f zip-deflate  -d dir_to_archive -o archive.zip  \
+                  --prepend RepoName-master
 ```
 
-**Pack the archive, deterministically**
+More useful would is potentially repacking an archive which was generated from another source:
 
 ```bash
-./reproducible.py -d out_dir -o archive.tar.gz --prepend RepoName-master
+./reproducible.py -f zip-deflate  -a some-existing-archive.zip -o reproducible-archive.zip
 ```
-
-## Note
-Check your timestamps! Python uses the `zipfile` module to build wheels, and it has trouble dealing with pre-1980 timestamps.
