@@ -13,6 +13,8 @@ cd "${SCRIPT_DIR}" || exit 1  # This is an unlikely failure, so don't worry too 
 # Source common includes
 source include.sh
 
+PYTHON_VERSION=${PYTHON_VERSION:-3.9}
+
 # Check setup requirements
 requires=(
     "virtualenv"
@@ -45,7 +47,7 @@ fi
 
 log "Checking for virtualenv"
 if [ ! -d venv ]; then
-    if ! virtualenv -p python3.9 venv ; then
+    if ! virtualenv -p "python${PYTHON_VERSION}" venv ; then
         fatal 1 "Could not setup a python 3.9 virtual environment."
     fi
 fi

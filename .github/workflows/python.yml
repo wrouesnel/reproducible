@@ -1,0 +1,44 @@
+name: reproducible
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Setup environment
+      run: |
+        export PYTHON_VERSION=${{ matrix.python-version }}
+        bash autogen.sh
+
+    - name: Format check
+      run: |
+        bash fmt --check
+
+    - name: Lint with flake8
+      run: |
+        bash lint
+
+    - name: Typecheck
+      run: |
+        bash typechec
+
+    - name: Test with pytest
+      run: |
+        bash test
