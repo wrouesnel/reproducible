@@ -22,6 +22,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt')-${{ hashFiles('requirements.dev.txt') }}
+
     - name: Setup environment
       run: |
         export PYTHON_VERSION=${{ matrix.python-version }}

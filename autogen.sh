@@ -55,11 +55,11 @@ fi
 log "Activating virtualenv and installing development environment"
 source activate
 
-if ! pip install -e . ; then
+if ! pip install --upgrade --upgrade-strategy eager -e . ; then
     fatal 1 "Failed to install the application into the virtualenv."
 fi
 
-if ! pip install -r "requirements.dev.txt" ; then
+if ! pip install --upgrade --upgrade-strategy eager -r "requirements.dev.txt" ; then
     fatal 1 "Failed to install development requirements (hooks and tests will not work properly)."
 fi
 
