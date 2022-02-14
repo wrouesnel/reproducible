@@ -38,7 +38,7 @@ jobs:
 
     - name: Typecheck
       run: |
-        bash typechec
+        bash typecheck
 
     - name: Test with pytest
       run: |
