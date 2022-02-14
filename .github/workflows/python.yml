@@ -1,4 +1,4 @@
-name: reproducible
+name: Build
 
 on:
   push:
