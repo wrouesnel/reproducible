@@ -201,7 +201,12 @@ def main(argv: Optional[Sequence[str]]) -> None:
     else:
         archive_dir = args.dir
 
-    fn(archive_dir, args.out, args.prepend, exclude_set=set(args.exclude))
+    fn(
+        archive_dir,
+        args.out,
+        args.prepend,
+        exclude_set=set(args.exclude) if args.exclude is not None else None,
+    )
 
     if args.archive is not None:
         temp_dir.cleanup()
