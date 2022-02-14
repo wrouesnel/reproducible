@@ -2,4 +2,7 @@
 import sys
 from . import reproducible
 
-reproducible.main(sys.argv[1:])
+
+def main() -> None:
+    """Main entry point when function is executed as a module"""
+    reproducible.main(sys.argv[1:])
