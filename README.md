@@ -1,3 +1,5 @@
+[![Build](https://github.com/wrouesnel/reproducible/actions/workflows/python.yml/badge.svg)](https://github.com/wrouesnel/reproducible/actions/workflows/python.yml)
+
 # reproducible
 
 Modified Version.
