@@ -13,4 +13,4 @@ cd "${SCRIPT_DIR}" || exit 1  # This is an unlikely failure, so don't worry too 
 source include.sh
 source activate
 
-exec pytest "--junitxml=.testreports/unit.xml" "--cov=app" "--cov-branch" "$@"
+exec pytest "--junitxml=.testreports/unit.xml" "--cov=reproducible" "--cov-branch" "$@"

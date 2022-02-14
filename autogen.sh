@@ -39,10 +39,12 @@ if ! git config --get remote.origin.fetch "\+refs/pull/\*/head:refs/remotes/orig
 fi
 
 log "Linking hook scripts"
-if [ "$(readlink -f .git/hooks)" != "$(readlink -f .githooks)" ] ; then
-    if ! ln -sf "$(readlink -f .githooks)" ".git/hooks"; then
-        fatal 1 "Failed to activate repository git hooks."
+if [ -e ".githooks" ] ; then
+  while read -r hook; do
+    if ! ln -sf "$hook" ".git/hooks/$(basename "$hook")"; then
+          fatal 1 "Failed to activate repository git hooks."
     fi
+  done < <(find ".githooks" -type f)
 fi
 
 log "Checking for virtualenv"

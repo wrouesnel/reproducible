@@ -20,9 +20,6 @@ from argparse import ArgumentParser
 from typing import List, Tuple, Optional, Set, IO, Sequence, Iterator, cast, TYPE_CHECKING
 from zipfile import ZipFile
 
-if TYPE_CHECKING:
-    from _typeshed import SupportsWrite
-
 
 @contextlib.contextmanager
 def setlocale(name: str) -> Iterator[None]:
@@ -42,7 +39,7 @@ def os_walk_error_handler(exc_instance: BaseException) -> None:
 
 def tar_archive_deterministically(
     dir_to_archive: str,
-    out_file: IO[bytes],
+    out_file: str,
     prepend_path: Optional[str] = None,
     compress: bool = True,
     file_selector: Optional[Set[str]] = None,
@@ -79,8 +76,8 @@ def tar_archive_deterministically(
     with setlocale("C"):
         target_files.sort(key=lambda t: locale.strxfrm(t[0]))
 
-    def tar_deterministically(outf: SupportsWrite[bytes]) -> None:
-        with tarfile.open(fileobj=cast(IO[bytes], outf), mode="w:") as tar_file:
+    def tar_deterministically(outf: IO[bytes]) -> None:
+        with tarfile.open(fileobj=outf, mode="w:") as tar_file:
             for relpath, fpath in target_files:
                 arcname = relpath
                 if prepend_path is not None:
@@ -91,9 +88,10 @@ def tar_archive_deterministically(
         with gzip.GzipFile(
             filename=representative_name, mode="wb", fileobj=out_file, mtime=0
         ) as gzip_file:
-            tar_deterministically(gzip_file)
+            tar_deterministically(cast(IO[bytes],gzip_file))
     else:
-        tar_deterministically(out_file)
+        with open(out_file, "wb") as out_file:
+            tar_deterministically(out_file)
 
 
 def zip_archive_deterministically(
