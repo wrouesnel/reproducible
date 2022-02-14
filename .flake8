@@ -2,11 +2,11 @@
 exclude = .vscode,.idea,.git,__pycache__,old,build,dist,venv,stubs,venv.*
 max-line-length = 120
 
-ignore = D415,ANN101,D202,E231,C812,C819,E203,SC200
+ignore = D415,ANN101,D202,E231,C812,C819,E203,SC200,CCR001
 
 per-file-ignores =
     setup.py:D100,D101
-    **/*/__init__.py:F401
+    **/*/__init__.py:F401,D104
     tests/**/test_*.py:D100,ANN201,S101
 
 # flake8-formatter-abspath

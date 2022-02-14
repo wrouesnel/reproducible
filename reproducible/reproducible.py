@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Standalone python file for building or repacking archives reproducibly"""
 
 import io
 import shutil
@@ -21,7 +22,7 @@ from zipfile import ZipFile
 
 
 @contextlib.contextmanager
-def setlocale(name):
+def setlocale(name: str) -> None:
     """Context manager for changing the current locale"""
     saved_locale = locale.setlocale(locale.LC_ALL)
     try:
@@ -30,15 +31,20 @@ def setlocale(name):
         locale.setlocale(locale.LC_ALL, saved_locale)
 
 
+def os_walk_error_handler(exc_instance: BaseException) -> None:
+    """Exception handler function for os.walk"""
+    raise exc_instance
+
+
 def tar_archive_deterministically(
     dir_to_archive: str,
     out_file: IO[bytes],
-    prepend_path=None,
+    prepend_path: Optional[str] = None,
     compress: bool = True,
     file_selector: Optional[Set[str]] = None,
-):
-    """
-    Create a deterministic tar archive
+) -> None:
+    """Create a deterministic tar archive
+
     :param dir_to_archive: path to the directory to form the root of the archive
     :param out_file: name of the output file
     :param prepend_path: path to prepend to the root of the arhive
@@ -48,7 +54,7 @@ def tar_archive_deterministically(
     """
     representative_name = f"{os.path.basename(dir_to_archive)}.tar"
 
-    def reset(tarinfo):
+    def reset(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo:
         """Helper to reset owner/group and modification time for tar entries"""
         tarinfo.uid = tarinfo.gid = 0
         tarinfo.uname = tarinfo.gname = "root"
@@ -56,16 +62,20 @@ def tar_archive_deterministically(
         return tarinfo
 
     target_files: List[Tuple[str, str]] = []
-    for root, dirs, files in os.walk(dir_to_archive):
-        for fpath in itertools.chain(dirs, files):
+    for root, dirs, files in os.walk(dir_to_archive, onerror=os_walk_error_handler):
+        for fname in itertools.chain(dirs, files):
+            fpath = os.path.join(root, fname)
             relpath = os.path.relpath(fpath, dir_to_archive)
+            if file_selector is not None:
+                if relpath not in file_selector:
+                    continue
             target_files.append((relpath, fpath))
 
     # Sort file entries with the fixed locale
     with setlocale("C"):
-        target_files.sort(key=lambda r, f: locale.strxfrm(r))
+        target_files.sort(key=lambda t: locale.strxfrm(t[0]))
 
-    def tar_deterministically(outf: IO[bytes]):
+    def tar_deterministically(outf: IO[bytes]) -> None:
         with tarfile.open(fileobj=outf, mode="w:") as tar_file:
             for relpath, fpath in target_files:
                 arcname = relpath
@@ -85,13 +95,12 @@ def tar_archive_deterministically(
 def zip_archive_deterministically(
     dir_to_archive: str,
     out_file: IO[bytes],
-    prepend_path=None,
-    timestamp=0,
+    prepend_path: Optional[str] = None,
     compress: bool = True,
     file_selector: Optional[Set[str]] = None,
-):
-    """
-    Create a deterministic zip archive
+) -> None:
+    """Create a deterministic zip archive
+
     :param dir_to_archive: path to the directory to form the root of the archive
     :param out_file: name of the output file
     :param prepend_path: path to prepend to the root of the arhive
@@ -108,7 +117,7 @@ def zip_archive_deterministically(
             compression=zipfile.ZIP_STORED if not compress else zipfile.ZIP_DEFLATED,
         ) as z:
             target_files: List[Tuple[str, str]] = []
-            for root, dirs, files in os.walk(dir_to_archive):
+            for root, _dirs, files in os.walk(dir_to_archive, onerror=os_walk_error_handler):
                 for fname in files:
                     fpath = os.path.join(root, fname)
                     # Note that dates prior to 1 January 1980 are not supported
@@ -120,22 +129,23 @@ def zip_archive_deterministically(
 
             # Sort file entries with the fixed locale
             with setlocale("C"):
-                target_files.sort(key=lambda r, f: locale.strxfrm(r))
+                target_files.sort(key=lambda t: locale.strxfrm(t[0]))
 
             for relpath, fpath in sorted(target_files):
-                if prepend_path is not None:
-                    arcname = os.path.normpath(os.path.join(prepend_path, relpath))
-                else:
-                    arcname = relpath
+                arcname = (
+                    os.path.normpath(os.path.join(prepend_path, relpath))
+                    if prepend_path is not None
+                    else relpath
+                )
                 info = zipfile.ZipInfo(arcname, date_time=(1980, 1, 1, 0, 0, 0))
                 with open(fpath, "rb") as inpf:
                     z.writestr(info, inpf.read())
         f.seek(0, io.SEEK_SET)
         while True:
-            b = f.read(1024)
-            if len(b) == 0:
+            data_bytes = f.read(1024)
+            if len(data_bytes) == 0:
                 break
-            out_file.write(b)
+            out_file.write(data_bytes)
 
 
 """Define the possible output formats. Default is tar.gz"""
@@ -147,7 +157,8 @@ OUTPUT_FMTS = {
 }
 
 
-def main(argv: Optional[Sequence[str]]):
+def main(argv: Optional[Sequence[str]]) -> None:
+    """Entrypoint for the command line utility"""
     parser = ArgumentParser()
 
     parser.add_argument(
