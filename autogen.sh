@@ -42,7 +42,7 @@ log "Linking hook scripts"
 if [ -e ".githooks" ] ; then
   while read -r hook; do
       log "$hook"
-    if ! ln -sf "$hook" ".git/hooks/$(basename "$hook")"; then
+    if ! ln -sf "$(readlink -f $hook)" ".git/hooks/$(basename "$hook")"; then
           fatal 1 "Failed to activate repository git hooks."
     fi
   done < <(find ".githooks" -type f)
