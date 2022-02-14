@@ -42,6 +42,7 @@ def tar_archive_deterministically(
     prepend_path: Optional[str] = None,
     compress: bool = True,
     file_selector: Optional[Set[str]] = None,
+    exclude_set: Optional[Set[str]] = None,
 ) -> None:
     """Create a deterministic tar archive
 
@@ -50,6 +51,7 @@ def tar_archive_deterministically(
     :param prepend_path: path to prepend to the root of the arhive
     :param compress: if true, uses gz compression
     :param file_selector: set of relative file paths to include
+    :param exclude_set: set of file paths to exclude from the archive, relative or absolute
     :return:
     """
     representative_name = "reproducible.tar"
@@ -68,6 +70,11 @@ def tar_archive_deterministically(
             relpath = os.path.relpath(fpath, dir_to_archive)
             if file_selector is not None:
                 if relpath not in file_selector:
+                    continue
+            if exclude_set is not None:
+                if relpath in exclude_set:
+                    continue
+                elif fpath in exclude_set:
                     continue
             target_files.append((relpath, fpath))
 
@@ -99,6 +106,7 @@ def zip_archive_deterministically(
     prepend_path: Optional[str] = None,
     compress: bool = True,
     file_selector: Optional[Set[str]] = None,
+    exclude_set: Optional[Set[str]] = None,
 ) -> None:
     """Create a deterministic zip archive
 
@@ -107,6 +115,7 @@ def zip_archive_deterministically(
     :param prepend_path: path to prepend to the root of the arhive
     :param compress: if true, uses gz compression
     :param file_selector: set of relative file paths to include
+    :param exclude_set: set of file paths to exclude from the archive, relative or absolute
     :return:
     """
     # Zip files can't be written sequentially, so fake it with named temporary files
@@ -125,6 +134,11 @@ def zip_archive_deterministically(
                     relpath = os.path.relpath(fpath, dir_to_archive)
                     if file_selector is not None:
                         if relpath not in file_selector:
+                            continue
+                    if exclude_set is not None:
+                        if relpath in exclude_set:
+                            continue
+                        elif fpath in exclude_set:
                             continue
                     target_files.append((relpath, fpath))
 
@@ -168,6 +182,13 @@ def main(argv: Optional[Sequence[str]]) -> None:
     parser.add_argument("-o", "--out", help="archive destination", required=True)
     parser.add_argument("-p", "--prepend", help="prepend path")
 
+    parser.add_argument(
+        "-e",
+        "--exclude",
+        nargs="+",
+        help="list of relative paths to exclude, space separated",
+    )
+
     args = parser.parse_args(argv)
 
     fn = OUTPUT_FMTS[args.format]
@@ -180,7 +201,7 @@ def main(argv: Optional[Sequence[str]]) -> None:
     else:
         archive_dir = args.dir
 
-    fn(archive_dir, args.out, args.prepend)
+    fn(archive_dir, args.out, args.prepend, exclude_set=set(args.exclude))
 
     if args.archive is not None:
         temp_dir.cleanup()
