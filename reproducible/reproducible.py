@@ -124,7 +124,8 @@ def zip_archive_deterministically(
             f.name,
             "w",
             allowZip64=True,
-            compression=zipfile.ZIP_STORED if not compress else zipfile.ZIP_DEFLATED,
+            compression=zipfile.ZIP_DEFLATED if compress else zipfile.ZIP_STORED,
+            compresslevel=6,
         ) as z:
             target_files: List[Tuple[str, str]] = []
             for root, _dirs, files in os.walk(dir_to_archive, onerror=os_walk_error_handler):
@@ -154,7 +155,12 @@ def zip_archive_deterministically(
                 )
                 info = zipfile.ZipInfo(arcname, date_time=(1980, 1, 1, 0, 0, 0))
                 with open(fpath, "rb") as inpf:
-                    z.writestr(info, inpf.read())
+                    z.writestr(
+                        info,
+                        inpf.read(),
+                        compress_type=zipfile.ZIP_DEFLATED if compress else zipfile.ZIP_STORED,
+                        compresslevel=6,
+                    )
         shutil.copyfile(f.name, out_file)
 
 
